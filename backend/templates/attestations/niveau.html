@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Attestation de Niveau</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2.5cm 2cm;
+        }
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 13pt;
+            line-height: 1.5;
+            color: #000;
+        }
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .header-table td {
+            border: 1px solid #000;
+            padding: 5px;
+            vertical-align: middle;
+            text-align: center;
+        }
+        .col-left {
+            width: 25%;
+        }
+        .col-left img {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 5px;
+        }
+        .col-middle {
+            width: 35%;
+            font-weight: bold;
+            font-size: 11pt;
+            text-align: left;
+            padding-left: 10px;
+        }
+        .col-right {
+            width: 40%;
+            font-size: 10pt;
+            text-align: left;
+            padding-left: 10px;
+        }
+        .col-right-inner {
+            display: table;
+            width: 100%;
+        }
+        .col-right-text {
+            display: table-cell;
+            vertical-align: middle;
+        }
+        .col-right-logo {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: right;
+        }
+        .col-right-logo img {
+            max-width: 60px;
+            height: auto;
+        }
+        .ref-date {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .title {
+            text-align: center;
+            font-size: 16pt;
+            font-weight: bold;
+            margin-top: 40px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
+        .content {
+            margin-top: 20px;
+        }
+        .content p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        .signature-section {
+            margin-top: 60px;
+            text-align: right;
+            padding-right: 50px;
+        }
+        .signature-title {
+            margin-bottom: 100px;
+        }
+        .signature-name {
+            font-weight: bold;
+        }
+        .blue-text {
+            color: #0000FF;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <table class="header-table">
+        <tr>
+            <td class="col-left">
+                <!-- Using file URI or absolute URL if served locally, weasyprint needs full path -->
+                <img src="file:///home/guilavogui/working/DL3_Sa_Gui/CertiUGANC_Bot/backend/media/logos/logo1.png" alt="UGANC Logo">
+                <div style="font-size: 8pt; font-weight: bold;">UGANC</div>
+                <div style="font-size: 6pt;">Université Gamal Abdel Nasser<br>de Conakry</div>
+            </td>
+            <td class="col-middle">
+                UNIVERSITE GAMAL<br>
+                ABDEL NASSER DE<br>
+                CONAKRY<br>
+                B.P : 1147<br>
+                Conakry / R. Guinée
+            </td>
+            <td class="col-right">
+                <div class="col-right-inner">
+                    <div class="col-right-text">
+                        CENTRE INFORMATIQUE<br>
+                        Tél : +224 624 08 45 01<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+224 657 99 43 57<br>
+                        <span class="blue-text">direction@ci.edu.gn</span>
+                    </div>
+                    <div class="col-right-logo">
+                        <img src="file:///home/guilavogui/working/DL3_Sa_Gui/CertiUGANC_Bot/backend/media/logos/logo2.png" alt="CI Logo">
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="ref-date">
+        <div>N° Réf. <span style="text-decoration: underline;">{{ demande.id|stringformat:"03d" }}</span>/2024/CI/UGANC</div>
+        <div>Conakry, le {% now "d F Y" %}</div>
+    </div>
+
+    <div class="title">
+        ATTESTATION DE NIVEAU
+    </div>
+
+    <div class="content">
+        <p>Nous soussigné Dr Ibrahima Kalil TOURE, Directeur Général du Centre Informatique, Attestons que l'{% if etudiant.genre == 'F' %}étudiante{% else %}étudiant{% endif %}</p>
+        
+        <p>Nom : <strong>{{ etudiant.user.last_name|upper }}</strong> Prénoms : <strong>{{ etudiant.user.first_name }}</strong></p>
+        
+        <p>{% if etudiant.genre == 'F' %}Née{% else %}Né{% endif %} le {{ etudiant.date_naissance|date:"d F Y" }} à {{ etudiant.lieu_naissance }}</p>
+        
+        <p>{% if etudiant.genre == 'F' %}Fille{% else %}Fils{% endif %} de : {{ etudiant.prenom_pere }} et de : {{ etudiant.prenom_nom_mere }}</p>
+        
+        <p>A régulièrement suivi et validé toutes les unités d'enseignement de la <strong>{{ demande.type_attestation.libelle|slice:"-2:" }}</strong> au titre de l'année universitaire {{ etudiant.annee_inscription }} sous le matricule : <strong>{{ etudiant.numero_etudiant }}</strong>.</p>
+        
+        <p>Faculté : <strong><em>{{ etudiant.faculte|upper }}</em></strong></p>
+        <p>Département : <strong><em>{{ etudiant.get_departement_display|upper }}</em></strong></p>
+        <p>Programme : <strong><em>{{ etudiant.programme|upper }}</em></strong></p>
+
+        <p style="margin-top: 30px;">En foi de quoi, la présente attestation lui a été délivrée pour servir et valoir ce que de droit.</p>
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-title">Le Directeur Général</div>
+        <!-- Espace vide pour la signature manuelle et le cachet -->
+        <div class="signature-name">Dr Ibrahima Kalil TOURE</div>
+    </div>
+
+</body>
+</html>
