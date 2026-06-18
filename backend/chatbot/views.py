@@ -41,7 +41,7 @@ class ChatbotMessageView(APIView):
                 session.current_state = ConversationSession.State.ATTENTE_MDP
                 session.save()
                 return self._build_response(
-                    text="Matricule/INE trouvé ✅. Veuillez maintenant saisir votre mot de passe pour vous authentifier.",
+                    text="Matricule/INE trouvé ✅. Veuillez maintenant saisir votre mot de passe pour vous authentifier.\n\n💡 Si c'est votre première connexion, votre mot de passe par défaut est votre numéro de matricule.",
                     options=[],
                     state=session.current_state,
                     session_id=session_id
@@ -102,14 +102,14 @@ class ChatbotMessageView(APIView):
                 session.current_state = ConversationSession.State.DOCUMENT_CHOISI
                 session.save()
                 
-                # L'attestation d'inscription est générée automatiquement
+                # L'attestation d'inscription passe en statut EN_ATTENTE pour validation admin
                 DemandeAttestation.objects.create(
                     etudiant=session.etudiant,
                     type_attestation=type_att,
-                    statut=DemandeAttestation.Statut.VALIDEE
+                    statut=DemandeAttestation.Statut.EN_ATTENTE
                 )
                 return self._build_response(
-                    text="Votre attestation d'inscription a été validée et générée avec succès ! Une fois imprimée, veuillez vous rendre dans le bureau du Directeur (Dr Ibrahima Kalil TOURE) pour la signature et le cachet physique.",
+                    text="Votre demande d'Attestation d'Inscription a été envoyée ! Dès qu'elle sera validée par l'administration, vous pourrez la récupérer.",
                     options=[{"label": "Faire une autre demande", "value": "RESTART"}],
                     state=session.current_state,
                     session_id=session_id
