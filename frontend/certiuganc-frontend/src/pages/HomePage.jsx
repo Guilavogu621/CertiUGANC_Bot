@@ -16,7 +16,7 @@ const HomePage = () => {
   const [sessionId, setSessionId] = useState(null);
   const [currentOptions, setCurrentOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const messagesEndRef = useRef(null);
   const isInitialized = useRef(false);
   const [isFaqOpen, setIsFaqOpen] = useState(false);
@@ -37,15 +37,15 @@ const HomePage = () => {
     sendMessage(''); // Envoi d'un message vide pour déclencher l'état d'accueil côté API
   }, []);
 
-  const sendMessage = async (messageText) => {
+  const sendMessage = async (messageText, displayLabel = null) => {
     // Si c'est un message utilisateur non vide, on l'affiche
     if (messageText.trim() !== '') {
       // Masquer le mot de passe dans l'historique des messages si on est dans l'état ATTENTE_MDP
       const isPassword = messages.length > 0 && messages[messages.length - 1].text.includes('mot de passe');
-      const displayText = isPassword ? '••••••••' : messageText;
+      const displayText = isPassword ? '••••••••' : (displayLabel || messageText);
       setMessages(prev => [...prev, { text: displayText, isBot: false }]);
     }
-    
+
     setIsLoading(true);
     setCurrentOptions([]); // Vider les options pendant la requête
 
@@ -56,22 +56,22 @@ const HomePage = () => {
       });
 
       const { session_id, text, options } = response.data;
-      
+
       if (!sessionId) setSessionId(session_id);
 
       // Ajouter la réponse du chatbot
       setMessages(prev => [...prev, { text: text, isBot: true }]);
-      
+
       // Mettre à jour les boutons d'options
       if (options && options.length > 0) {
         setCurrentOptions(options);
       }
     } catch (error) {
       console.error('Erreur Chatbot API:', error);
-      setMessages(prev => [...prev, { 
-        text: "Une erreur de connexion est survenue avec le service de scolarité. Veuillez réessayer plus tard.", 
+      setMessages(prev => [...prev, {
+        text: "Une erreur de connexion est survenue avec le service de scolarité. Veuillez réessayer plus tard.",
         isBot: true,
-        isError: true 
+        isError: true
       }]);
     } finally {
       setIsLoading(false);
@@ -81,18 +81,18 @@ const HomePage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
-    
+
     sendMessage(inputValue);
     setInputValue('');
   };
 
-  const handleOptionClick = (optionValue) => {
-    sendMessage(optionValue);
+  const handleOptionClick = (optionValue, optionLabel) => {
+    sendMessage(optionValue, optionLabel);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      
+
       {/* Bandeau d'en-tête (Header) */}
       <header className="bg-white border-b border-gray-200 shadow-sm px-6 py-4 flex items-center justify-between z-10">
         <div className="flex items-center gap-3">
@@ -122,7 +122,7 @@ const HomePage = () => {
             <FaQuestionCircle className="text-sm text-blue-700" />
             FAQ & Aide
           </button>
-          
+
           <Link
             to="/login/agent"
             className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-blue-700 hover:bg-slate-50 rounded-xl border border-gray-200 transition-all shadow-sm"
@@ -135,10 +135,10 @@ const HomePage = () => {
 
       {/* Zone centrale du Chatbot */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col justify-between overflow-hidden">
-        
+
         {/* Fenêtre de Chat */}
         <div className="flex-1 bg-white border border-gray-200 rounded-2xl shadow-md flex flex-col overflow-hidden">
-          
+
           {/* Section d'accueil d'aide */}
           <div className="bg-slate-50 border-b border-gray-100 px-6 py-3 flex items-center justify-between text-xs text-slate-500">
             <span>Discutez avec l'assistant pour générer ou suivre vos demandes.</span>
@@ -150,7 +150,7 @@ const HomePage = () => {
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'}`}>
                 <div className={`flex max-w-[80%] ${msg.isBot ? 'flex-row' : 'flex-row-reverse'} items-start`}>
-                  
+
                   {/* Icone d'avatar */}
                   {msg.isBot ? (
                     <img src={logoCI} alt="Logo CI" className="w-8 h-8 rounded-full border border-gray-200 bg-white p-1 object-contain shadow-sm shrink-0" />
@@ -161,14 +161,21 @@ const HomePage = () => {
                   )}
 
                   {/* Bulle de message */}
-                  <div className={`p-4 rounded-2xl shadow-sm text-sm border leading-relaxed ${
-                    msg.isBot
-                      ? msg.isError 
-                        ? 'bg-red-50 text-red-700 border-red-100 rounded-tl-none' 
+                  <div className={`p-4 rounded-2xl shadow-sm text-sm border leading-relaxed ${msg.isBot
+                      ? msg.isError
+                        ? 'bg-red-50 text-red-700 border-red-100 rounded-tl-none'
                         : 'bg-white text-slate-800 border-gray-100 rounded-tl-none'
                       : 'bg-blue-700 text-white border-blue-700 rounded-tr-none'
-                  }`}>
-                    <p className="whitespace-pre-wrap">{msg.text}</p>
+                    }`}>
+                    <p className="whitespace-pre-wrap">
+                      {msg.text.split(/(https?:\/\/[^\s]+)/g).map((part, i) => 
+                        part.match(/(https?:\/\/[^\s]+)/g) ? (
+                          <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline font-semibold hover:text-blue-700">
+                            [Cliquez ici pour télécharger]
+                          </a>
+                        ) : part
+                      )}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -178,10 +185,10 @@ const HomePage = () => {
             {isLoading && (
               <div className="flex justify-start">
                 <div className="flex items-start">
-                  <img 
-                    src={logoUganc} 
-                    alt="Avatar Bot" 
-                    className="w-8 h-8 rounded-full border border-gray-200 bg-white p-1 object-contain shadow-sm mr-3 flex-shrink-0 animate-pulse" 
+                  <img
+                    src={logoUganc}
+                    alt="Avatar Bot"
+                    className="w-8 h-8 rounded-full border border-gray-200 bg-white p-1 object-contain shadow-sm mr-3 flex-shrink-0 animate-pulse"
                   />
                   <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 flex space-x-1 items-center h-10 px-4">
                     <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
@@ -198,7 +205,7 @@ const HomePage = () => {
                 {currentOptions.map((opt, idx) => (
                   <button
                     key={idx}
-                    onClick={() => handleOptionClick(opt.value)}
+                    onClick={() => handleOptionClick(opt.value, opt.label)}
                     className="px-4 py-3 bg-white hover:bg-blue-50 text-blue-700 text-sm font-semibold rounded-xl border border-blue-200 hover:border-blue-400 transition-all duration-200 shadow-sm text-left flex justify-between items-center group"
                   >
                     <span>{opt.label}</span>
@@ -230,7 +237,7 @@ const HomePage = () => {
           </form>
 
         </div>
-        
+
         {/* Mentions légales au pied de la discussion */}
         <p className="text-center text-[10px] text-slate-400 mt-3">
           © 2026 UGANC — Université Gamal Abdel Nasser de Conakry • Service de Scolarité Numérique

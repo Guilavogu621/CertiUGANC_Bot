@@ -67,7 +67,8 @@ class ChatbotMessageView(APIView):
                     text=f"Authentification réussie ! Bonjour {user.first_name}. Quel document souhaitez-vous demander ?",
                     options=[
                         {"label": "Attestation d'Inscription", "value": "INSCRIPTION"},
-                        {"label": "Attestation de Niveau", "value": "NIVEAU"}
+                        {"label": "Attestation de Niveau", "value": "NIVEAU"},
+                        {"label": "📄 Télécharger mes attestations", "value": "SUIVI"}
                     ],
                     state=session.current_state,
                     session_id=session_id
@@ -87,7 +88,8 @@ class ChatbotMessageView(APIView):
                     text="Veuillez utiliser les boutons pour choisir un document.",
                     options=[
                         {"label": "Attestation d'Inscription", "value": "INSCRIPTION"},
-                        {"label": "Attestation de Niveau", "value": "NIVEAU"}
+                        {"label": "Attestation de Niveau", "value": "NIVEAU"},
+                        {"label": "📄 Télécharger mes attestations", "value": "SUIVI"}
                     ],
                     state=session.current_state,
                     session_id=session_id
@@ -124,6 +126,29 @@ class ChatbotMessageView(APIView):
                         {"label": "Niveau L2", "value": "L2"},
                         {"label": "Niveau L3", "value": "L3"}
                     ],
+                    state=session.current_state,
+                    session_id=session_id
+                )
+            elif message == "SUIVI":
+                demandes_validees = DemandeAttestation.objects.filter(
+                    etudiant=session.etudiant,
+                    statut=DemandeAttestation.Statut.VALIDEE,
+                    document__isnull=False
+                ).select_related('type_attestation', 'document')
+                
+                if not demandes_validees.exists():
+                    texte = "Vous n'avez actuellement aucune attestation validée prête à être téléchargée."
+                else:
+                    texte = "Voici vos documents validés et prêts au téléchargement :\n\n"
+                    for d in demandes_validees:
+                        url = f"http://localhost:8000{d.document.chemin_fichier.url}"
+                        texte += f"✅ {d.type_attestation.libelle} :\n{url}\n\n"
+                
+                session.current_state = ConversationSession.State.DOCUMENT_CHOISI
+                session.save()
+                return self._build_response(
+                    text=texte.strip(),
+                    options=[{"label": "Faire une autre demande", "value": "RESTART"}],
                     state=session.current_state,
                     session_id=session_id
                 )
@@ -196,7 +221,8 @@ class ChatbotMessageView(APIView):
                     text="Quel autre document souhaitez-vous demander ?",
                     options=[
                         {"label": "Attestation d'Inscription", "value": "INSCRIPTION"},
-                        {"label": "Attestation de Niveau", "value": "NIVEAU"}
+                        {"label": "Attestation de Niveau", "value": "NIVEAU"},
+                        {"label": "📄 Télécharger mes attestations", "value": "SUIVI"}
                     ],
                     state=session.current_state,
                     session_id=session_id
