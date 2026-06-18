@@ -83,7 +83,7 @@ class ChatbotMessageView(APIView):
                 
         elif session.current_state == ConversationSession.State.AUTHENTIFIE:
             # L'utilisateur choisit le type de document
-            if message not in ["INSCRIPTION", "NIVEAU"]:
+            if message not in ["INSCRIPTION", "NIVEAU", "SUIVI"]:
                 return self._build_response(
                     text="Veuillez utiliser les boutons pour choisir un document.",
                     options=[
